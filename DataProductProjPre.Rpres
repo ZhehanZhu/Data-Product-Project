@@ -1,0 +1,56 @@
+Developing Data Products Project Presentation
+========================================================
+author: Zhehan Zhu
+date: `r date()`
+
+Introduction
+========================================================
+
+[Make a Guess](https://zhehanzhu.shinyapps.io/Project/) is a game in which each player guess a four-digit number withou replacement, e.g. 0123, 7256.
+
+- Each round, a new number is generated until the player starts a new game.
+- After clicking the "Submit" button, the player can see the current result as well as the history records. $A$ means both the number and its position is correct, while $B$ means only the number is correct.
+- If the player gives up and wants to see the answer, he or she can click "Show Answer".
+
+Algorithm
+========================================================
+
+- We use $sample()$ to generate a new four-digit number without replacement.
+```{r, eval=FALSE}
+sample(x = 10, size = 4, replace = FALSE) - 1
+```
+- $sum((ans() - guess()) == 0)$ calcualtes $A$, which indicates the number of digits whose values and positions are both correct.
+- $length(intersect(ans(), guess())) - sum((ans() - guess()) == 0)$ calculates $B$, which indicates the number of digits whose values are right only.
+
+Algorithm Continued
+========================================================
+
+Also, for convenience, the history records of each guess per round are shown, like
+```{r, echo=FALSE}
+ans <- sample(10,4,F)-1
+history <- vector()
+for (i in 1:5){
+  guess <- sample(10,4,F)-1
+  history <- rbind(history, cbind(paste(guess, collapse = ""), "Result", sum((ans- guess) == 0), "A", length(intersect(ans, guess)) - sum((ans - guess) == 0), "B")) 
+  }
+history
+```  
+The answer is `r ans[1]*10^3+ans[2]*10^2+ans[3]*10+ans[4]`.
+
+More information
+========================================================
+
+Here is some code for your reference.
+```{r, eval=FALSE}
+    ...
+    output$currResult <- renderText({
+      input$Submit
+      isolate(cbind(sum((ans()-guess()) == 0),"A",length(intersect(ans(), guess())) - sum((ans() - guess()) == 0),"B"))
+      })
+    output$historyTable <- renderTable({
+      if(input$Submit > 0 ){
+        isolate(values$history <- rbind(values$history, cbind(input$D1, input$D2, input$D3, input$D4,"Result", sum((ans() - guess()) == 0), "A", length(intersect(ans(), guess())) - sum((ans() - guess()) == 0), "B")))
+        }
+      })
+    ...
+```
